@@ -63,7 +63,7 @@ fun algoStart(inputData: ArrayList <ArrayList<String>>, outputFile: BufferedWrit
 
 fun algoIteration(process: Process) {
     val fifoResult = fifo(process)
-
+    val lruResult = lru(process)
 }
 
 fun fifo(process: Process): Pair<String, Int> {
@@ -73,23 +73,56 @@ fun fifo(process: Process): Pair<String, Int> {
     val firstIn: Queue<Int> = LinkedList()
     val positionInRam = IntArray(process.processDataSize)
     for(request in process.listOfRequests) {
-        if(request in nowInRam)
+        if(request in nowInRam) {
             resultList.add(0)
-        else {
-            numberOfChanges++
-            var position: Int
-            if(nowInRam.size < process.ramSize) //there is empty slot in ram
-                position = nowInRam.size + 1
-            else {
-                val first = firstIn.poll()
-                position = positionInRam[first - 1]
-                nowInRam.remove(first)
-            }
-            firstIn.add(request)
-            positionInRam[request - 1] = position
-            resultList.add(position)
-            nowInRam.add(request)
+            continue
         }
+        numberOfChanges++
+        var position: Int
+        if(nowInRam.size < process.ramSize) //there is empty slot in ram
+            position = nowInRam.size + 1
+        else {
+            val first = firstIn.poll()
+            position = positionInRam[first - 1]
+            nowInRam.remove(first)
+        }
+        firstIn.add(request)
+        positionInRam[request - 1] = position
+        resultList.add(position)
+        nowInRam.add(request)
+    }
+    return Pair(resultList.joinToString(" "), numberOfChanges)
+}
+
+fun lru(process: Process): Pair<String, Int> {
+    val resultList = mutableListOf<Int>()
+    var numberOfChanges = 0
+    val nowInRam = mutableSetOf<Int>()
+    val lastRequestQueue = PriorityQueue<Pair<Int, Int>>(compareBy{it.second}) //first element in pair - page number, second - time
+    val lastRequest = IntArray(process.processDataSize)
+    val positionInRam = IntArray(process.processDataSize)
+    for((time, request) in process.listOfRequests.withIndex()) {
+        lastRequest[request - 1] = time //update time of last use
+        lastRequestQueue.add(Pair(request, time))
+        if(request in nowInRam) {
+            resultList.add(0)
+            continue
+        }
+        numberOfChanges++
+        var position: Int
+        if(nowInRam.size < process.ramSize) //there is empty slot in ram
+            position = nowInRam.size + 1
+        else {
+            while(!((lastRequest[lastRequestQueue.peek().first - 1] == lastRequestQueue.peek().second) &&
+                    (lastRequestQueue.peek().first in nowInRam))) //outdated elements
+                lastRequestQueue.poll()
+            val leastRecentlyUsed = lastRequestQueue.poll().first
+            position = positionInRam[leastRecentlyUsed - 1]
+            nowInRam.remove(leastRecentlyUsed)
+        }
+        positionInRam[request - 1] = position
+        resultList.add(position)
+        nowInRam.add(request)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
 }
