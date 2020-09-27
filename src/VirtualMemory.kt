@@ -1,6 +1,8 @@
 package virtMem
 import java.io.BufferedWriter
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var listOfRequests: List<Int> = listOf())
 
@@ -47,12 +49,57 @@ fun isCorrect(sizes: List<String>, requests: List<String>): Boolean {
             requests.all { element -> (element.toIntOrNull() != null) && (element.toInt() > 0)}
 }
 
+fun algoStart(inputData: ArrayList <ArrayList<String>>, outputFile: BufferedWriter) {
+    for (inputRequests in inputData) {
+        val processPair = toProcess(inputRequests)
+        if(processPair.second) {
+            val process = processPair.first
+            algoIteration(process)
+        }
+        else
+            output("Incorrect input data", outputFile)
+    }
+}
+
+fun algoIteration(process: Process) {
+    val fifoResult = fifo(process)
+
+}
+
+fun fifo(process: Process): Pair<String, Int> {
+    val resultList = mutableListOf<Int>()
+    var numberOfChanges = 0
+    val nowInRam = mutableSetOf<Int>()
+    val firstIn: Queue<Int> = LinkedList()
+    val positionInRam = IntArray(process.processDataSize)
+    for(request in process.listOfRequests) {
+        if(request in nowInRam)
+            resultList.add(0)
+        else {
+            numberOfChanges++
+            var position: Int
+            if(nowInRam.size < process.ramSize) //there is empty slot in ram
+                position = nowInRam.size + 1
+            else {
+                val first = firstIn.poll()
+                position = positionInRam[first - 1]
+                nowInRam.remove(first)
+            }
+            firstIn.add(request)
+            positionInRam[request - 1] = position
+            resultList.add(position)
+            nowInRam.add(request)
+        }
+    }
+    return Pair(resultList.joinToString(" "), numberOfChanges)
+}
+
 fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
     val inputData: ArrayList <ArrayList<String>> = arrayListOf()
     if(args.isEmpty() && inputProcessing(args, inputData))
         output("Incorrect input data", outputFile)
     else {
-
+        algoStart(inputData, outputFile)
     }
 }
