@@ -54,16 +54,24 @@ fun algoStart(inputData: ArrayList <ArrayList<String>>, outputFile: BufferedWrit
         val processPair = toProcess(inputRequests)
         if(processPair.second) {
             val process = processPair.first
-            algoIteration(process)
+            algoIteration(process, outputFile)
         }
         else
             output("Incorrect input data", outputFile)
     }
 }
 
-fun algoIteration(process: Process) {
+fun algoIteration(process: Process, outputFile: BufferedWriter) {
     val fifoResult = fifo(process)
     val lruResult = lru(process)
+    val optResult = opt(process)
+    output("fifo: " + fifoResult.first, outputFile)
+    output("lru: " + lruResult.first, outputFile)
+    output("opt: " + optResult.first, outputFile)
+    output("fifoCount: " + fifoResult.second, outputFile)
+    output("lruCount: " + lruResult.second, outputFile)
+    output("optCount: " + optResult.second, outputFile)
+    output("-", outputFile)
 }
 
 fun fifo(process: Process): Pair<String, Int> {
@@ -127,12 +135,56 @@ fun lru(process: Process): Pair<String, Int> {
     return Pair(resultList.joinToString(" "), numberOfChanges)
 }
 
+fun opt(process: Process): Pair<String, Int> {
+    val resultList = mutableListOf<Int>()
+    var numberOfChanges = 0
+    val nowInRam = mutableSetOf<Int>()
+    val futureRequests = optPreprocessing(process) //queue of future requests of each page
+    val futureRequestsQueue = PriorityQueue<Pair<Int, Int>>(compareBy{ -it.second }) //first element in pair - page number, second - time
+    val positionInRam = IntArray(process.processDataSize)
+    for(request in process.listOfRequests) {
+        futureRequests[request - 1].poll() //delete future request that is happening now
+        if(request in nowInRam) {
+            resultList.add(0)
+            futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
+            continue
+        }
+        numberOfChanges++
+        var position: Int
+        if(nowInRam.size < process.ramSize) //there is empty slot in ram
+            position = nowInRam.size + 1
+        else {
+            while(!((futureRequestsQueue.peek().second ==
+                    futureRequests[futureRequestsQueue.peek().first - 1].peek()) &&
+                    (futureRequestsQueue.peek().first in nowInRam))) //outdated elements
+                futureRequestsQueue.poll()
+            val optimalPage = futureRequestsQueue.poll().first
+            position = positionInRam[optimalPage - 1]
+            nowInRam.remove(optimalPage)
+        }
+        futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
+        positionInRam[request - 1] = position
+        resultList.add(position)
+        nowInRam.add(request)
+    }
+    return Pair(resultList.joinToString(" "), numberOfChanges)
+}
+
+fun optPreprocessing(process: Process): Array<Queue<Int>> {
+    val result: Array<Queue<Int>> = Array(process.processDataSize) { LinkedList<Int>() }
+    process.listOfRequests.forEachIndexed {time, element -> result[element - 1].add(time)}
+    val infinity = 1e9.toInt()
+    result.forEach { element -> element.add(infinity) }
+    return result
+}
+
 fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
     val inputData: ArrayList <ArrayList<String>> = arrayListOf()
-    if(args.isEmpty() && inputProcessing(args, inputData))
+    if(args.isEmpty() || !inputProcessing(args, inputData))
         output("Incorrect input data", outputFile)
     else {
         algoStart(inputData, outputFile)
     }
+    outputFile.close()
 }
