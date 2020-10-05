@@ -28,16 +28,13 @@ fun inputProcessing(args: Array <String>): Pair<InputData, Boolean> {
 }
 
 fun toProcess(inputList: List<String>): Pair<Process, Boolean> {
-    val resultProcess = Process()
     if(inputList.size != 2)
-        return Pair(resultProcess, false)
+        return Pair(Process(), false)
     val sizes = inputList[0].split(" ")
     val requests = inputList[1].split(" ")
     if(!isCorrect(sizes, requests))
-        return Pair(resultProcess, false)
-    resultProcess.processDataSize = sizes.first().toInt()
-    resultProcess.ramSize = sizes.last().toInt()
-    resultProcess.listOfRequests = requests.map{ element -> element.toInt()}
+        return Pair(Process(), false)
+    val resultProcess = Process(sizes.first().toInt(), sizes.last().toInt(), requests.map{ element -> element.toInt()})
     return Pair(resultProcess, true)
 }
 
