@@ -2,6 +2,7 @@ package virtMem
 import java.io.BufferedWriter
 import java.io.File
 import java.util.*
+import kotlin.random.Random
 
 data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var listOfRequests: List<Int> = listOf())
 
@@ -190,13 +191,30 @@ fun optNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<In
     nowInRam.add(request)
 }
 
+fun generateTest(args: Array <String>, outputFile: BufferedWriter) {
+    val processDataSize = args[1].toIntOrNull() ?: -1
+    val ramSize = args[2].toIntOrNull() ?: -1
+    val numberOfRequests = args[3].toIntOrNull() ?: -1
+    if(processDataSize < 1 || ramSize < 1 || numberOfRequests < 1)
+        output("Incorrect input data", outputFile)
+    else {
+        output(args[1] + " " + args[2], outputFile)
+        output(IntArray(numberOfRequests) { Random.nextInt(1, processDataSize + 1) }.joinToString(" "), outputFile)
+    }
+}
+
 fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
-    val (inputData, isCorrect) = inputProcessing(args)
-    if(args.isEmpty() || !isCorrect)
-        output("File doesn't exist", outputFile)
+    if(args.size > 3 && args[0] == "gen") {
+        generateTest(args, outputFile)
+    }
     else {
-        algoStart(inputData, outputFile)
+        val (inputData, isCorrect) = inputProcessing(args)
+        if (args.isEmpty() || !isCorrect)
+            output("File doesn't exist", outputFile)
+        else {
+            algoStart(inputData, outputFile)
+        }
     }
     outputFile.close()
 }

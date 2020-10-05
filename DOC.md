@@ -36,3 +36,11 @@ $ java -jar [JAR FILE] [TEXT FILE]
 ```
 
 Jar file can be found in build/libs/
+
+##### How to generate tests
+
+Enter this in the terminal to generate test:
+
+```bash
+$ java -jar "gen" [PROCESS DATA SIZE] [RAM SIZE] [NUMBER OF REQUESTS]
+```
