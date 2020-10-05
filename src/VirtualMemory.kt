@@ -6,6 +6,7 @@ import java.util.*
 data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var listOfRequests: List<Int> = listOf())
 
 typealias InputData = List<List<String>>
+typealias LastRequestQueue = PriorityQueue<Pair<Int, Int>>
 
 fun output(outputString: String, outputFile: BufferedWriter) {
     outputFile.write(outputString)
@@ -15,10 +16,10 @@ fun output(outputString: String, outputFile: BufferedWriter) {
 fun inputProcessing(args: Array <String>): Pair<InputData, Boolean> {
     val input = File(args[0])
     if(!input.exists())
-        return Pair(listOf(listOf<String>()), false)
+        return Pair(listOf(listOf()), false)
     val inputInformation = input.readLines()
     val inputData: InputData = inputInformation.fold(mutableListOf(mutableListOf<String>())) { list, element ->
-        if(element == "-")
+        if(element == "-")              //input requests separated by '-'
             list.add(mutableListOf())
         else
             list.last().add(element)
@@ -29,7 +30,7 @@ fun inputProcessing(args: Array <String>): Pair<InputData, Boolean> {
 
 fun toProcess(inputList: List<String>): Pair<Process, Boolean> {
     if(inputList.size != 2)
-        return Pair(Process(), false)
+        return Pair(Process(), false) //in input data must be only two rows
     val sizes = inputList[0].split(" ")
     val requests = inputList[1].split(" ")
     if(!isCorrect(sizes, requests))
@@ -39,8 +40,8 @@ fun toProcess(inputList: List<String>): Pair<Process, Boolean> {
 }
 
 fun isCorrect(sizes: List<String>, requests: List<String>): Boolean {
-    return sizes.size == 2 &&
-            sizes.all { element -> (element.toIntOrNull() != null) && (element.toInt() > 0)} &&
+    return sizes.size == 2 && //there must be two elements in sizes
+            sizes.all { element -> (element.toIntOrNull() != null) && (element.toInt() > 0)} && //each number must be positive
             requests.all { element -> (element.toIntOrNull() != null) && (element.toInt() > 0)}
 }
 
@@ -76,32 +77,36 @@ fun fifo(process: Process): Pair<String, Int> {
     val positionInRam = IntArray(process.processDataSize)
 
     for(request in process.listOfRequests) {
-        if(request in nowInRam) {
+        if(request in nowInRam)
             resultList.add(0)
-            continue
-        }
-        numberOfChanges++
-        var position: Int
-        if(nowInRam.size < process.ramSize) //there is empty slot in ram
-            position = nowInRam.size + 1
         else {
-            val first = firstIn.poll()
-            position = positionInRam[first - 1]
-            nowInRam.remove(first)
+            numberOfChanges++
+            fifoNotInRamIteration(process, request, nowInRam, firstIn, positionInRam, resultList)
         }
-        firstIn.add(request)
-        positionInRam[request - 1] = position
-        resultList.add(position)
-        nowInRam.add(request)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
+}
+
+fun fifoNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, firstIn: Queue<Int>,
+                          positionInRam: IntArray, resultList: MutableList<Int>) {
+    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
+        nowInRam.size + 1
+    else {
+        val first = firstIn.poll()
+        nowInRam.remove(first)
+        positionInRam[first - 1]
+    }
+    firstIn.add(request)
+    positionInRam[request - 1] = position
+    resultList.add(position)
+    nowInRam.add(request)
 }
 
 fun lru(process: Process): Pair<String, Int> {
     val resultList = mutableListOf<Int>()
     var numberOfChanges = 0
     val nowInRam = mutableSetOf<Int>()
-    val lastRequestQueue = PriorityQueue<Pair<Int, Int>>(compareBy{it.second}) //first element in pair - page number, second - time
+    val lastRequestQueue = LastRequestQueue(compareBy{it.second}) //first element in pair - page number, second - time
     val lastRequest = IntArray(process.processDataSize)
     val positionInRam = IntArray(process.processDataSize)
 
@@ -113,22 +118,26 @@ fun lru(process: Process): Pair<String, Int> {
             continue
         }
         numberOfChanges++
-        var position: Int
-        if(nowInRam.size < process.ramSize) //there is empty slot in ram
-            position = nowInRam.size + 1
-        else {
-            while(!((lastRequest[lastRequestQueue.peek().first - 1] == lastRequestQueue.peek().second) &&
-                    (lastRequestQueue.peek().first in nowInRam))) //outdated elements
-                lastRequestQueue.poll()
-            val leastRecentlyUsed = lastRequestQueue.poll().first
-            position = positionInRam[leastRecentlyUsed - 1]
-            nowInRam.remove(leastRecentlyUsed)
-        }
-        positionInRam[request - 1] = position
-        resultList.add(position)
-        nowInRam.add(request)
+        lruNotInRamIteration(process, request, nowInRam, lastRequestQueue, lastRequest, positionInRam, resultList)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
+}
+
+fun lruNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, lastRequestQueue: LastRequestQueue,
+                         lastRequest: IntArray, positionInRam: IntArray, resultList: MutableList<Int>) {
+    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
+        nowInRam.size + 1
+    else {
+        while(!((lastRequest[lastRequestQueue.peek().first - 1] == lastRequestQueue.peek().second) &&
+                        (lastRequestQueue.peek().first in nowInRam))) //outdated elements
+            lastRequestQueue.poll()
+        val leastRecentlyUsed = lastRequestQueue.poll().first
+        nowInRam.remove(leastRecentlyUsed)
+        positionInRam[leastRecentlyUsed - 1]
+    }
+    positionInRam[request - 1] = position
+    resultList.add(position)
+    nowInRam.add(request)
 }
 
 fun opt(process: Process): Pair<String, Int> {
@@ -179,7 +188,7 @@ fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
     val (inputData, isCorrect) = inputProcessing(args)
     if(args.isEmpty() || !isCorrect)
-        output("Incorrect input data", outputFile)
+        output("File doesn't exist", outputFile)
     else {
         algoStart(inputData, outputFile)
     }
