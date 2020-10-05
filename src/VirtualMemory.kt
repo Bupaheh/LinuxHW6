@@ -7,6 +7,8 @@ data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var lis
 
 typealias InputData = List<List<String>>
 typealias LastRequestQueue = PriorityQueue<Pair<Int, Int>>
+typealias FutureRequestsQueue = PriorityQueue<Pair<Int, Int>>
+typealias FutureRequestsOfEachPage = Array<Queue<Int>>
 
 fun output(outputString: String, outputFile: BufferedWriter) {
     outputFile.write(outputString)
@@ -96,8 +98,8 @@ fun fifoNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<I
         nowInRam.remove(first)
         positionInRam[first - 1]
     }
-    firstIn.add(request)
-    positionInRam[request - 1] = position
+    firstIn.add(request) //add new element in queue
+    positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
     nowInRam.add(request)
 }
@@ -135,7 +137,7 @@ fun lruNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<In
         nowInRam.remove(leastRecentlyUsed)
         positionInRam[leastRecentlyUsed - 1]
     }
-    positionInRam[request - 1] = position
+    positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
     nowInRam.add(request)
 }
@@ -145,7 +147,7 @@ fun opt(process: Process): Pair<String, Int> {
     var numberOfChanges = 0
     val nowInRam = mutableSetOf<Int>()
     val futureRequests = optPreprocessing(process) //queue of future requests of each page
-    val futureRequestsQueue = PriorityQueue<Pair<Int, Int>>(compareBy{ -it.second }) //first element in pair - page number, second - time
+    val futureRequestsQueue = FutureRequestsQueue(compareBy{ -it.second }) //first element in pair - page number, second - time
     val positionInRam = IntArray(process.processDataSize)
 
     for(request in process.listOfRequests) {
@@ -156,32 +158,36 @@ fun opt(process: Process): Pair<String, Int> {
             continue
         }
         numberOfChanges++
-        var position: Int
-        if(nowInRam.size < process.ramSize) //there is empty slot in ram
-            position = nowInRam.size + 1
-        else {
-            while(!((futureRequestsQueue.peek().second ==
-                    futureRequests[futureRequestsQueue.peek().first - 1].peek()) &&
-                    (futureRequestsQueue.peek().first in nowInRam))) //outdated elements
-                futureRequestsQueue.poll()
-            val optimalPage = futureRequestsQueue.poll().first
-            position = positionInRam[optimalPage - 1]
-            nowInRam.remove(optimalPage)
-        }
-        futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
-        positionInRam[request - 1] = position
-        resultList.add(position)
-        nowInRam.add(request)
+        optNotInRamIteration(process, request, nowInRam, futureRequests, futureRequestsQueue, positionInRam, resultList)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
 }
 
-fun optPreprocessing(process: Process): Array<Queue<Int>> {
+fun optPreprocessing(process: Process): FutureRequestsOfEachPage {
     val result: Array<Queue<Int>> = Array(process.processDataSize) { LinkedList<Int>() }
     process.listOfRequests.forEachIndexed {time, element -> result[element - 1].add(time)}
     val infinity = 1e9.toInt()
     result.forEach { element -> element.add(infinity) }
     return result
+}
+
+fun optNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, futureRequests: FutureRequestsOfEachPage,
+                         futureRequestsQueue: FutureRequestsQueue, positionInRam: IntArray, resultList: MutableList<Int>) {
+    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
+        nowInRam.size + 1
+    else {
+        while(!((futureRequestsQueue.peek().second ==
+                        futureRequests[futureRequestsQueue.peek().first - 1].peek()) &&
+                        (futureRequestsQueue.peek().first in nowInRam))) //outdated elements
+            futureRequestsQueue.poll()
+        val optimalPage = futureRequestsQueue.poll().first
+        nowInRam.remove(optimalPage)
+        positionInRam[optimalPage - 1]
+    }
+    futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
+    positionInRam[request - 1] = position //update position in ramK
+    resultList.add(position)
+    nowInRam.add(request)
 }
 
 fun main(args: Array <String>) {
