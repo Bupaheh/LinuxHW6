@@ -2,34 +2,32 @@ package virtMem
 import java.io.BufferedWriter
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
 
 data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var listOfRequests: List<Int> = listOf())
+
+typealias InputData = List<List<String>>
 
 fun output(outputString: String, outputFile: BufferedWriter) {
     outputFile.write(outputString)
     outputFile.newLine()
 }
 
-fun inputProcessing(args: Array <String>, inputData: ArrayList <ArrayList<String>>):Boolean {
+fun inputProcessing(args: Array <String>): Pair<InputData, Boolean> {
     val input = File(args[0])
     if(!input.exists())
-        return false
+        return Pair(listOf(listOf<String>()), false)
     val inputInformation = input.readLines()
-    var index = 0
-    inputData.add(arrayListOf())
-    inputInformation.map { element ->
-        if(element == "-") {
-            index++
-            inputData.add(arrayListOf())
-        }
+    val inputData: InputData = inputInformation.fold(mutableListOf(mutableListOf<String>())) { list, element ->
+        if(element == "-")
+            list.add(mutableListOf())
         else
-            inputData[index].add(element)
+            list.last().add(element)
+        list
     }
-    return true
+    return Pair(inputData, true)
 }
 
-fun toProcess(inputList: ArrayList<String>): Pair<Process, Boolean> {
+fun toProcess(inputList: List<String>): Pair<Process, Boolean> {
     val resultProcess = Process()
     if(inputList.size != 2)
         return Pair(resultProcess, false)
@@ -49,13 +47,11 @@ fun isCorrect(sizes: List<String>, requests: List<String>): Boolean {
             requests.all { element -> (element.toIntOrNull() != null) && (element.toInt() > 0)}
 }
 
-fun algoStart(inputData: ArrayList <ArrayList<String>>, outputFile: BufferedWriter) {
+fun algoStart(inputData: InputData, outputFile: BufferedWriter) {
     for (inputRequests in inputData) {
-        val processPair = toProcess(inputRequests)
-        if(processPair.second) {
-            val process = processPair.first
+        val (process, toProcessBoolean) = toProcess(inputRequests)
+        if(toProcessBoolean)
             algoIteration(process, outputFile)
-        }
         else
             output("Incorrect input data", outputFile)
     }
@@ -65,6 +61,7 @@ fun algoIteration(process: Process, outputFile: BufferedWriter) {
     val fifoResult = fifo(process)
     val lruResult = lru(process)
     val optResult = opt(process)
+
     output("fifo: " + fifoResult.first, outputFile)
     output("lru: " + lruResult.first, outputFile)
     output("opt: " + optResult.first, outputFile)
@@ -80,6 +77,7 @@ fun fifo(process: Process): Pair<String, Int> {
     val nowInRam = mutableSetOf<Int>()
     val firstIn: Queue<Int> = LinkedList()
     val positionInRam = IntArray(process.processDataSize)
+
     for(request in process.listOfRequests) {
         if(request in nowInRam) {
             resultList.add(0)
@@ -109,6 +107,7 @@ fun lru(process: Process): Pair<String, Int> {
     val lastRequestQueue = PriorityQueue<Pair<Int, Int>>(compareBy{it.second}) //first element in pair - page number, second - time
     val lastRequest = IntArray(process.processDataSize)
     val positionInRam = IntArray(process.processDataSize)
+
     for((time, request) in process.listOfRequests.withIndex()) {
         lastRequest[request - 1] = time //update time of last use
         lastRequestQueue.add(Pair(request, time))
@@ -142,6 +141,7 @@ fun opt(process: Process): Pair<String, Int> {
     val futureRequests = optPreprocessing(process) //queue of future requests of each page
     val futureRequestsQueue = PriorityQueue<Pair<Int, Int>>(compareBy{ -it.second }) //first element in pair - page number, second - time
     val positionInRam = IntArray(process.processDataSize)
+
     for(request in process.listOfRequests) {
         futureRequests[request - 1].poll() //delete future request that is happening now
         if(request in nowInRam) {
@@ -180,8 +180,8 @@ fun optPreprocessing(process: Process): Array<Queue<Int>> {
 
 fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
-    val inputData: ArrayList <ArrayList<String>> = arrayListOf()
-    if(args.isEmpty() || !inputProcessing(args, inputData))
+    val (inputData, isCorrect) = inputProcessing(args)
+    if(args.isEmpty() || !isCorrect)
         output("Incorrect input data", outputFile)
     else {
         algoStart(inputData, outputFile)

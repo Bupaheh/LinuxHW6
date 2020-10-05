@@ -7,35 +7,28 @@ internal class InputProcessingTests {
 
     @Test
     fun `inputProcessing test`() {
-        val resultList: ArrayList <ArrayList<String>> = arrayListOf()
-        val resultBool = virtMem.inputProcessing(arrayOf("test/inputProcessingTestsInput/test1.txt"), resultList)
-        val answerList: ArrayList <ArrayList<String>> = arrayListOf(arrayListOf("11 12", "1 2 3 10 12 14 15"))
+        val result = virtMem.inputProcessing(arrayOf("test/inputProcessingTestsInput/test1.txt"))
+        val answerList: List <List<String>> = arrayListOf(arrayListOf("11 12", "1 2 3 10 12 14 15"))
         assertAll(
-                { assertEquals(answerList, resultList) },
-                { assertTrue(resultBool) }
+                { assertEquals(answerList, result.first) },
+                { assertTrue(result.second) }
         )
     }
 
     @Test
     fun `inputProcessing test with batch processing`() {
-        val resultList: ArrayList <ArrayList<String>> = arrayListOf()
-        val resultBool = virtMem.inputProcessing(arrayOf("test/inputProcessingTestsInput/test2.txt"), resultList)
-        val answerList: ArrayList <ArrayList<String>> = arrayListOf(arrayListOf("11 12", "5 12 1 3 2 14"),
+        val result = virtMem.inputProcessing(arrayOf("test/inputProcessingTestsInput/test2.txt"))
+        val answerList: List <List<String>> = arrayListOf(arrayListOf("11 12", "5 12 1 3 2 14"),
                 arrayListOf("5 4", "2 4 12 5 3"))
         assertAll(
-                { assertEquals(answerList, resultList) },
-                { assertTrue(resultBool) }
+            { assertEquals(answerList, result.first) },
+            { assertTrue(result.second) }
         )
     }
 
     @Test
     fun `inputProcessing test with not existing file`() {
-        val resultList: ArrayList <ArrayList<String>> = arrayListOf()
-        val resultBool = virtMem.inputProcessing(arrayOf("YEP.txt"), resultList)
-        val answerList: ArrayList <ArrayList<String>> = arrayListOf()
-        assertAll(
-                { assertEquals(answerList, resultList) },
-                { assertFalse(resultBool) }
-        )
+        val result = virtMem.inputProcessing(arrayOf("YEP.txt"))
+        assertFalse(result.second)
     }
 }
