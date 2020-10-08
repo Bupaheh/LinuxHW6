@@ -9,12 +9,12 @@ typealias FutureRequestsOfEachPage = Array<Queue<Int>>
 //result list - список замещаемых страниц.
 //numberOfChanges - количество замещений кадров.
 //positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
-//futureRequests - futureRequests[page] - очередь обращений к странице page.
+//futureRequestOfThePage - futureRequestOfThePage[page] - время следующеего обращения к странице page.
 //futureRequestsQueue - очередь с приоритетом, в которую добавляются элементы Pair(page, time)
 //при обращении к странице page. time - время следующего запроса к данной странице.
 //Элементы сортируются по убыванию time.
 
-//Удаляем текущий запрос из futureRequests[page - 1].
+//Удаляем текущий запрос из futureRequestOfThePage[page - 1].
 //Если запрашиваемая страница находится в оперативной памяти,
 //то добавляем следующий запрос к этой странице в futureRequestsQueue.
 //Если запрашиваемая страница не присутствует в оперативной памяти,

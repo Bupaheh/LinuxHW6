@@ -8,13 +8,13 @@ typealias LeastRecentlyUsedQueue = SortedSet<Pair<Int, Int>>
 //result list - список замещаемых страниц.
 //numberOfChanges - количество замещений кадров.
 //positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
-//lastRequestQueue - очередь с приоритетом, в которую добавляются элементы Pair(page, time)
+//leastRecentlyUsedQueue - очередь с приоритетом, в которую добавляются элементы Pair(page, time)
 //при обращении к странице page. Элементы сортируются по возрастанию time.
-//lastRequest - lastRequest[page] - время последнего обращения к странице page. Нужен, чтобы
-//удалять устаревшие элементы из lastRequestQueue.
+//lastRequestOfThePage - lastRequestOfThePage[page] - время последнего обращения к странице page.
+//Нужен, чтобы удалять устаревшие элементы из leastRecentlyUsedQueue.
 
-//Удаляем из lastRequestQueue предыдущий запрос к этой странице.
-//Добавляем текущий запрос в lastRequestQueue
+//Удаляем из leastRecentlyUsedQueue предыдущий запрос к этой странице.
+//Добавляем текущий запрос в leastRecentlyUsedQueue
 //Если запрашиваемая страница не присутствует в оперативной памяти,
 //то запускается lruNotInRamIteration().
 fun lru(process: Process): Pair<String, Int> {
