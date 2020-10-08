@@ -54,7 +54,7 @@ fun optPreprocessing(process: Process): FutureRequestsOfEachPage {
 //Если в памяти есть свободное место, то страница записывается туда.
 //В обратном случае замещается страница, к которой дольше всего не будет обращений.
 //Добавляем следующий запрос к этой странице в futureRequestsQueue.
-fun optNotInRamIteration(process: Process, request: Int, futureRequests: FutureRequestsOfEachPage, futureRequestsQueue: FutureRequestsQueue,
+fun optNotInRamIteration(process: Process, request: Int, futureRequestOfThePage: FutureRequestsOfEachPage, futureRequestsQueue: FutureRequestsQueue,
                          positionInRam: IntArray, resultList: MutableList<Int>, numberOfChanges: Int) {
     val position = if(numberOfChanges < process.ramSize) //there is empty slot in ram
         numberOfChanges + 1
@@ -64,7 +64,7 @@ fun optNotInRamIteration(process: Process, request: Int, futureRequests: FutureR
         positionInRam[optimalPage - 1] = -1 //remove page from ram
         temp
     }
-    futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
+    futureRequestsQueue.add(Pair(request, futureRequestOfThePage[request - 1].peek())) //add new future request in priorityQueue
     positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
 }
