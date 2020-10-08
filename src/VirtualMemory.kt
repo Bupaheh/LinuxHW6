@@ -7,7 +7,7 @@ import kotlin.random.Random
 data class Process(var processDataSize: Int = -1, var ramSize: Int = -1, var listOfRequests: List<Int> = listOf())
 
 typealias InputData = List<List<String>>
-typealias LastRequestQueue = PriorityQueue<Pair<Int, Int>>
+typealias LastRequestQueue = SortedSet<Pair<Int, Int>>
 typealias FutureRequestsQueue = PriorityQueue<Pair<Int, Int>>
 typealias FutureRequestsOfEachPage = Array<Queue<Int>>
 
@@ -85,26 +85,24 @@ fun algoIteration(process: Process, outputFile: BufferedWriter) {
 //Реализует FIFO (first in — first out).
 //result list - список замещаемых страниц.
 //numberOfChanges - количество замещений кадров.
-//nowInRam - set со страницами, которые в данный момент в оператиыной памяти.
+//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 //firstIn - очередь, где первый элемент - страница,
 //которая попала в оперативную память раньше всех остальных.
-//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 
 //Если запрашиваемая страница не присутствует в оперативной памяти,
 //то запускается fifoNotInRamIteration().
 fun fifo(process: Process): Pair<String, Int> {
     val resultList = mutableListOf<Int>()
     var numberOfChanges = 0
-    val nowInRam = mutableSetOf<Int>()
+    val positionInRam = IntArray(process.processDataSize) {-1}
     val firstIn: Queue<Int> = LinkedList()
-    val positionInRam = IntArray(process.processDataSize)
 
     for(request in process.listOfRequests) {
-        if(request in nowInRam)
+        if(positionInRam[request - 1] != -1)
             resultList.add(0)
         else {
+            fifoNotInRamIteration(process, request, firstIn, positionInRam, resultList, numberOfChanges)
             numberOfChanges++
-            fifoNotInRamIteration(process, request, nowInRam, firstIn, positionInRam, resultList)
         }
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
@@ -113,84 +111,81 @@ fun fifo(process: Process): Pair<String, Int> {
 //Реализация случая, когда запрашиваемая страница не находится в оперативной памяти.
 //Если в памяти есть свободное место, то страница записывается туда.
 //В обратном случае замещается страница, которая попала в оперативную память раньше всех остальных.
-fun fifoNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, firstIn: Queue<Int>,
-                          positionInRam: IntArray, resultList: MutableList<Int>) {
-    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
-        nowInRam.size + 1
+fun fifoNotInRamIteration(process: Process, request: Int, firstIn: Queue<Int>,
+                          positionInRam: IntArray, resultList: MutableList<Int>, numberOfChanges: Int) {
+    val position = if(numberOfChanges < process.ramSize) //there is empty slot in ram
+        numberOfChanges + 1
     else {
         val first = firstIn.poll()
-        nowInRam.remove(first)
-        positionInRam[first - 1]
+        val temp = positionInRam[first - 1]
+        positionInRam[first - 1] = -1
+        temp
     }
     firstIn.add(request) //add new element in queue
     positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
-    nowInRam.add(request)
 }
 
 //LRU (least recently used).
 //result list - список замещаемых страниц.
 //numberOfChanges - количество замещений кадров.
-//nowInRam - set со страницами, которые в данный момент в оператиыной памяти.
+//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 //lastRequestQueue - очередь с приоритетом, в которую добавляются элементы Pair(page, time)
 //при обращении к странице page. Элементы сортируются по возрастанию time.
 //lastRequest - lastRequest[page] - время последнего обращения к странице page. Нужен, чтобы
 //удалять устаревшие элементы из lastRequestQueue.
-//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 
+//Удаляем из lastRequestQueue предыдущий запрос к этой странице.
+//Добавляем текущий запрос в lastRequestQueue
 //Если запрашиваемая страница не присутствует в оперативной памяти,
 //то запускается lruNotInRamIteration().
 fun lru(process: Process): Pair<String, Int> {
     val resultList = mutableListOf<Int>()
     var numberOfChanges = 0
-    val nowInRam = mutableSetOf<Int>()
-    val lastRequestQueue = LastRequestQueue(compareBy{it.second}) //first element in pair - page number, second - time
-    val lastRequest = IntArray(process.processDataSize)
-    val positionInRam = IntArray(process.processDataSize)
+    val positionInRam = IntArray(process.processDataSize) {-1}
+    val lastRequestQueue: LastRequestQueue = sortedSetOf(compareBy{it.second}) //first element in pair - page number, second - time
+    val lastRequest = IntArray(process.processDataSize) {-1}
 
     for((time, request) in process.listOfRequests.withIndex()) {
+        lastRequestQueue.remove(Pair(request, lastRequest[request - 1])) //remove outdated element
         lastRequest[request - 1] = time //update time of last use
         lastRequestQueue.add(Pair(request, time))
-        if(request in nowInRam) {
+        if(positionInRam[request - 1] != -1) {
             resultList.add(0)
             continue
         }
+        lruNotInRamIteration(process, request, lastRequestQueue, positionInRam, resultList, numberOfChanges)
         numberOfChanges++
-        lruNotInRamIteration(process, request, nowInRam, lastRequestQueue, lastRequest, positionInRam, resultList)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
 }
 
 //Реализация случая, когда запрашиваемая страница не находится в оперативной памяти.
 //Если в памяти есть свободное место, то страница записывается туда.
-//В обратном случае удаляются устаревшие элементы из lastRequestQueue,
-//а потом замещается страница, к которой дольше всего не было обращений.
-fun lruNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, lastRequestQueue: LastRequestQueue,
-                         lastRequest: IntArray, positionInRam: IntArray, resultList: MutableList<Int>) {
-    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
-        nowInRam.size + 1
+//В обратном случае замещается страница, к которой дольше всего не было обращений.
+fun lruNotInRamIteration(process: Process, request: Int, lastRequestQueue: LastRequestQueue,
+                         positionInRam: IntArray, resultList: MutableList<Int>, numberOfChanges: Int) {
+    val position = if(numberOfChanges < process.ramSize) //there is empty slot in ram
+        numberOfChanges + 1
     else {
-        while(!((lastRequest[lastRequestQueue.peek().first - 1] == lastRequestQueue.peek().second) &&
-                        (lastRequestQueue.peek().first in nowInRam))) //outdated elements
-            lastRequestQueue.poll()
-        val leastRecentlyUsed = lastRequestQueue.poll().first
-        nowInRam.remove(leastRecentlyUsed)
-        positionInRam[leastRecentlyUsed - 1]
+        val leastRecentlyUsed = lastRequestQueue.first().first
+        lastRequestQueue.remove(lastRequestQueue.first())
+        val temp = positionInRam[leastRecentlyUsed - 1]
+        positionInRam[leastRecentlyUsed - 1] = -1
+        temp
     }
     positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
-    nowInRam.add(request)
 }
 
 //OPT (optimal).
 //result list - список замещаемых страниц.
 //numberOfChanges - количество замещений кадров.
-//nowInRam - set со страницами, которые в данный момент в оператиыной памяти.
+//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 //futureRequests - futureRequests[page] - очередь обращений к странице page.
 //futureRequestsQueue - очередь с приоритетом, в которую добавляются элементы Pair(page, time)
 //при обращении к странице page. time - время следующего запроса к данной странице.
 //Элементы сортируются по убыванию time.
-//positionInRam - positionInRam[page] - номер кадра, в котором находится страница page.
 
 //Удаляем текущий запрос из futureRequests[page - 1].
 //Если запрашиваемая страница находится в оперативной памяти,
@@ -200,20 +195,19 @@ fun lruNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<In
 fun opt(process: Process): Pair<String, Int> {
     val resultList = mutableListOf<Int>()
     var numberOfChanges = 0
-    val nowInRam = mutableSetOf<Int>()
+    val positionInRam = IntArray(process.processDataSize) {-1}
     val futureRequests = optPreprocessing(process) //queue of future requests of each page
     val futureRequestsQueue = FutureRequestsQueue(compareBy{ -it.second }) //first element in pair - page number, second - time
-    val positionInRam = IntArray(process.processDataSize)
 
     for(request in process.listOfRequests) {
         futureRequests[request - 1].poll() //delete future request that is happening now
-        if(request in nowInRam) {
+        if(positionInRam[request - 1] != -1) {
             resultList.add(0)
             futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
             continue
         }
+        optNotInRamIteration(process, request, futureRequests, futureRequestsQueue, positionInRam, resultList, numberOfChanges)
         numberOfChanges++
-        optNotInRamIteration(process, request, nowInRam, futureRequests, futureRequestsQueue, positionInRam, resultList)
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
 }
@@ -223,7 +217,7 @@ fun opt(process: Process): Pair<String, Int> {
 //infinity - значение, необходимое для обозначения того, что к странице больше не будет запросов.
 fun optPreprocessing(process: Process): FutureRequestsOfEachPage {
     val result: FutureRequestsOfEachPage = Array(process.processDataSize) { LinkedList<Int>() }
-    val infinity = 1e9.toInt()
+    val infinity = process.listOfRequests.size
     process.listOfRequests.forEachIndexed {time, element -> result[element - 1].add(time)}
     result.forEach { element -> element.add(infinity) }
     return result
@@ -231,26 +225,21 @@ fun optPreprocessing(process: Process): FutureRequestsOfEachPage {
 
 //Реализация случая, когда запрашиваемая страница не находится в оперативной памяти.
 //Если в памяти есть свободное место, то страница записывается туда.
-//В обратном случае удаляются устаревшие элементы из futureRequestsQueue,
-//а потом замещается страница, к которой дольше всего не будет обращений.
+//В обратном случае замещается страница, к которой дольше всего не будет обращений.
 //Добавляем следующий запрос к этой странице в futureRequestsQueue.
-fun optNotInRamIteration(process: Process, request: Int, nowInRam: MutableSet<Int>, futureRequests: FutureRequestsOfEachPage,
-                         futureRequestsQueue: FutureRequestsQueue, positionInRam: IntArray, resultList: MutableList<Int>) {
-    val position = if(nowInRam.size < process.ramSize) //there is empty slot in ram
-        nowInRam.size + 1
+fun optNotInRamIteration(process: Process, request: Int, futureRequests: FutureRequestsOfEachPage, futureRequestsQueue: FutureRequestsQueue,
+                         positionInRam: IntArray, resultList: MutableList<Int>, numberOfChanges: Int) {
+    val position = if(numberOfChanges < process.ramSize) //there is empty slot in ram
+        numberOfChanges + 1
     else {
-        while(!((futureRequestsQueue.peek().second ==
-                        futureRequests[futureRequestsQueue.peek().first - 1].peek()) &&
-                        (futureRequestsQueue.peek().first in nowInRam))) //outdated elements
-            futureRequestsQueue.poll()
         val optimalPage = futureRequestsQueue.poll().first
-        nowInRam.remove(optimalPage)
-        positionInRam[optimalPage - 1]
+        val temp = positionInRam[optimalPage - 1]
+        positionInRam[optimalPage - 1] = -1
+        temp
     }
     futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
     positionInRam[request - 1] = position //update position in ram
     resultList.add(position)
-    nowInRam.add(request)
 }
 
 //Генерирует тест.
