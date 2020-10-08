@@ -18,7 +18,7 @@ fun fifo(process: Process): Pair<String, Int> {
     val firstIn: Queue<Int> = LinkedList()
 
     for(request in process.listOfRequests) {
-        if(positionInRam[request - 1] != -1)
+        if(positionInRam[request - 1] != -1) //page currently in ram
             resultList.add(0)
         else {
             fifoNotInRamIteration(process, request, firstIn, positionInRam, resultList, numberOfChanges)
@@ -38,7 +38,7 @@ fun fifoNotInRamIteration(process: Process, request: Int, firstIn: Queue<Int>,
     else {
         val first = firstIn.poll()
         val temp = positionInRam[first - 1]
-        positionInRam[first - 1] = -1
+        positionInRam[first - 1] = -1 //remove page from ram
         temp
     }
     firstIn.add(request) //add new element in queue

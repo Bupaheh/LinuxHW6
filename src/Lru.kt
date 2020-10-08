@@ -27,8 +27,8 @@ fun lru(process: Process): Pair<String, Int> {
     for((time, request) in process.listOfRequests.withIndex()) {
         lastRequestQueue.remove(Pair(request, lastRequest[request - 1])) //remove outdated element
         lastRequest[request - 1] = time //update time of last use
-        lastRequestQueue.add(Pair(request, time))
-        if(positionInRam[request - 1] != -1) {
+        lastRequestQueue.add(Pair(request, time)) //add new element
+        if(positionInRam[request - 1] != -1) { //page currently in ram
             resultList.add(0)
             continue
         }
@@ -46,10 +46,10 @@ fun lruNotInRamIteration(process: Process, request: Int, lastRequestQueue: LastR
     val position = if(numberOfChanges < process.ramSize) //there is empty slot in ram
         numberOfChanges + 1
     else {
-        val leastRecentlyUsed = lastRequestQueue.first().first
+        val leastRecentlyUsed = lastRequestQueue.first().first //get page that was least recently used
         lastRequestQueue.remove(lastRequestQueue.first())
         val temp = positionInRam[leastRecentlyUsed - 1]
-        positionInRam[leastRecentlyUsed - 1] = -1
+        positionInRam[leastRecentlyUsed - 1] = -1 //remove page from ram
         temp
     }
     positionInRam[request - 1] = position //update position in ram

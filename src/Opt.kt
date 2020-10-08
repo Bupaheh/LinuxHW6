@@ -23,17 +23,17 @@ fun opt(process: Process): Pair<String, Int> {
     val resultList = mutableListOf<Int>()
     var numberOfChanges = 0
     val positionInRam = IntArray(process.processDataSize) {-1}
-    val futureRequests = optPreprocessing(process) //queue of future requests of each page
+    val futureRequestOfThePage = optPreprocessing(process) //queue of future requests of each page
     val futureRequestsQueue = FutureRequestsQueue(compareBy{ -it.second }) //first element in pair - page number, second - time
 
     for(request in process.listOfRequests) {
-        futureRequests[request - 1].poll() //delete future request that is happening now
-        if(positionInRam[request - 1] != -1) {
+        futureRequestOfThePage[request - 1].poll() //delete future request that is happening now
+        if(positionInRam[request - 1] != -1) { //page currently in ram
             resultList.add(0)
-            futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
+            futureRequestsQueue.add(Pair(request, futureRequestOfThePage[request - 1].peek())) //add new future request in priorityQueue
             continue
         }
-        optNotInRamIteration(process, request, futureRequests, futureRequestsQueue, positionInRam, resultList, numberOfChanges)
+        optNotInRamIteration(process, request, futureRequestOfThePage, futureRequestsQueue, positionInRam, resultList, numberOfChanges)
         numberOfChanges++
     }
     return Pair(resultList.joinToString(" "), numberOfChanges)
@@ -61,7 +61,7 @@ fun optNotInRamIteration(process: Process, request: Int, futureRequests: FutureR
     else {
         val optimalPage = futureRequestsQueue.poll().first
         val temp = positionInRam[optimalPage - 1]
-        positionInRam[optimalPage - 1] = -1
+        positionInRam[optimalPage - 1] = -1 //remove page from ram
         temp
     }
     futureRequestsQueue.add(Pair(request, futureRequests[request - 1].peek())) //add new future request in priorityQueue
