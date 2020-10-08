@@ -269,7 +269,7 @@ fun generateTest(args: Array <String>, outputFile: BufferedWriter) {
 fun main(args: Array <String>) {
     val outputFile = File("output.txt").bufferedWriter()
     if(args.size > 3 && args[0] == "gen") {
-        generateTest(args, outputFile)
+        generateTest(args, File("outputTest.txt").bufferedWriter())
     }
     else {
         val (inputData, isCorrect) = inputProcessing(args)

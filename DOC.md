@@ -45,7 +45,7 @@ lruCount: 8
 optCount: 8
 ```
 
-The output data will be output in "output.txt" in the directory with jar file or in the root directory of the project. 
+The output data will be in "output.txt" in the directory with jar file or in the root directory of the project. 
 
 ##### How to run project using gradle
 
@@ -97,6 +97,8 @@ Example:
 $ gradle run --args='gen 20 5 40'
 ```
 
+Generated test will be in "outputTest.txt" in the directory with jar file or in the root directory of the project. 
+
 ##### How to generate test using jar
 
 Enter this in the terminal to generate test with [NUMBER OF REQUESTS] requests:
@@ -110,6 +112,8 @@ Example:
 ```bash
 $ java -jar gen 20 5 40
 ```
+
+Generated test will be in "outputTest.txt" in the directory with jar file or in the root directory of the project. 
 
 ##### Example of generated test
 
