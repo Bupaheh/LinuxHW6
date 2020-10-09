@@ -1,0 +1,7 @@
+fifo: 1 2 3 4 0 0 0 1 2 0 3 4 1
+lru: 1 2 3 4 0 0 0 1 2 0 3 1 2
+opt: 1 2 3 4 0 0 0 3 3 0 3 0 0
+fifoCount: 9
+lruCount: 9
+optCount: 7
+-
