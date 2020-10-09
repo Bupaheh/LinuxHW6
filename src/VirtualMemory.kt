@@ -41,6 +41,7 @@ fun generateTest(args: Array <String>, outputFile: BufferedWriter) {
         output(args[1] + " " + args[2], outputFile)
         output(IntArray(numberOfRequests) { Random.nextInt(1, processDataSize + 1) }.joinToString(" "), outputFile)
     }
+    outputFile.close()
 }
 
 fun main(args: Array <String>) {
