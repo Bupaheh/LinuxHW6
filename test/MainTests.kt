@@ -41,7 +41,7 @@ internal class MainTests {
     @Test
     fun `main test with not existing file`() {
         main(arrayOf("something"))
-        val answer = listOf("File doesn't exist")
+        val answer = listOf("Error: File doesn't exist")
         val result = File("output.txt").readLines()
         assertEquals(answer, result)
     }
@@ -49,7 +49,7 @@ internal class MainTests {
     @Test
     fun `main test with not correct data`() {
         main(arrayOf("data/test5.txt"))
-        val answer = listOf("Incorrect input data")
+        val answer = listOf("Error: Incorrect number of variables on the first line")
         val result = File("output.txt").readLines()
         assertEquals(answer, result)
     }
@@ -69,7 +69,7 @@ internal class MainTests {
     fun `main test with incorrect generation data`() {
         main(arrayOf("gen", "-2", "5", "12"))
         val resultLines = File("outputTest.txt").readLines()
-        val answer = listOf("Incorrect generation data")
+        val answer = listOf("Error: Incorrect generation arguments")
         assertEquals(answer, resultLines)
     }
 }

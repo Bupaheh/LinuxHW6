@@ -36,7 +36,7 @@ fun generateTest(args: Array <String>, outputFile: BufferedWriter) {
     val ramSize = args[2].toIntOrNull() ?: -1
     val numberOfRequests = args[3].toIntOrNull() ?: -1
     if(processDataSize < 1 || ramSize < 1 || numberOfRequests < 1)
-        output("Incorrect generation data", outputFile)
+        output("Error: Incorrect generation arguments", outputFile)
     else {
         output(args[1] + " " + args[2], outputFile)
         output(IntArray(numberOfRequests) { Random.nextInt(1, processDataSize + 1) }.joinToString(" "), outputFile)
@@ -52,9 +52,9 @@ fun main(args: Array <String>) {
     else {
         val (inputData, isCorrect) = inputProcessing(args)
         if (args.isEmpty() || !isCorrect)
-            output("File doesn't exist", outputFile)
+            output("Error: File doesn't exist", outputFile)
         else {
-            algoStart(inputData, outputFile)
+            algoBegin(inputData, outputFile)
         }
     }
     outputFile.close()
