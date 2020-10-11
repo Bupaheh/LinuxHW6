@@ -11,6 +11,8 @@ Input data must be in text file in the following format:
 <page request> <page request> ... <page request>
 ```
 
+\<process data size>, \<RAM size>, \<page request> must be positive integers.
+
 Example:
 
 ```
@@ -97,7 +99,7 @@ Example:
 $ gradle run --args='gen 20 5 40'
 ```
 
-Generated test will be in "outputTest.txt" in the directory with jar file or in the root directory of the project. 
+Generated test will be in "outputTest.txt" in the root directory of the project. 
 
 ##### How to generate test using jar
 
@@ -113,7 +115,7 @@ Example:
 $ java -jar gen 20 5 40
 ```
 
-Generated test will be in "outputTest.txt" in the directory with jar file or in the root directory of the project. 
+Generated test will be in "outputTest.txt" in the directory with jar file. 
 
 ##### Example of generated test
 

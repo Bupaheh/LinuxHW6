@@ -26,6 +26,7 @@ fun algoBegin(inputData: InputData, outputFile: BufferedWriter) {
             ToProcessErrors.Correct ->
                     algoIteration(process, outputFile)
         }
+        output("-", outputFile)
     }
 }
 
@@ -41,7 +42,6 @@ fun algoIteration(process: Process, outputFile: BufferedWriter) {
     output("fifoCount: " + fifoResult.second, outputFile)
     output("lruCount: " + lruResult.second, outputFile)
     output("optCount: " + optResult.second, outputFile)
-    output("-", outputFile)
 }
 
 //Преобразует список в Process.
