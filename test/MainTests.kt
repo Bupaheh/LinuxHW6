@@ -80,4 +80,12 @@ internal class MainTests {
         val result = File("output.txt").readLines()
         assertEquals(answer, result)
     }
+
+    @Test
+    fun `main test with a lot of data`() {
+        main(arrayOf("data/test7.txt"))
+        val answer = File("data/Results of examples/test7Ans.txt").readLines()
+        val result = File("output.txt").readLines()
+        assertEquals(answer, result)
+    }
 }
