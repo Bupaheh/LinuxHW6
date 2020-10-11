@@ -49,7 +49,7 @@ internal class MainTests {
     @Test
     fun `main test with not correct data`() {
         main(arrayOf("data/test5.txt"))
-        val answer = listOf("Error: Incorrect number of variables on the first line")
+        val answer = listOf("Error: Incorrect number of variables on the first line", "-")
         val result = File("output.txt").readLines()
         assertEquals(answer, result)
     }
@@ -71,5 +71,13 @@ internal class MainTests {
         val resultLines = File("outputTest.txt").readLines()
         val answer = listOf("Error: Incorrect generation arguments")
         assertEquals(answer, resultLines)
+    }
+
+    @Test
+    fun `main test with a lot of errors`() {
+        main(arrayOf("data/test6.txt"))
+        val answer = File("data/Results of examples/test6Ans.txt").readLines()
+        val result = File("output.txt").readLines()
+        assertEquals(answer, result)
     }
 }
