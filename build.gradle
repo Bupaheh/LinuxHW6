@@ -23,6 +23,18 @@ sourceSets {
             srcDirs = ['test']
         }
     }
+    integTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+        java {
+            srcDirs = ['integrationTests']
+        }
+    }
+}
+
+configurations {
+    integTestImplementation.extendsFrom implementation
+    integTestRuntimeOnly.extendsFrom runtimeOnly
 }
 
 jar {
@@ -42,6 +54,15 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.4.2"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.4.2"
+    integTestImplementation "org.jetbrains.kotlin:kotlin-test:1.4.10"
+    integTestImplementation "org.junit.jupiter:junit-jupiter-api:5.4.2"
+    integTestRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.4.2"
+}
+
+task integTest(type: Test){
+    testClassesDirs = sourceSets.integTest.output.classesDirs
+    classpath = sourceSets.integTest.runtimeClasspath
+    useJUnitPlatform()
 }
 
 test {

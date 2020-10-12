@@ -126,7 +126,7 @@ This test was generated using 'gen 20 5 40' argument:
 2 5 3 18 1 8 9 20 6 16 2 3 17 10 18 5 8 9 5 11 18 17 14 14 3 20 9 6 19 6 8 3 20 11 7 18 6 7 12 6
 ```
 
-##### How to run tests
+##### How to run JUnit tests
 
 Enter this in the terminal to run tests:
 
@@ -134,4 +134,14 @@ Enter this in the terminal to run tests:
 $ gradle test
  ```
 
-Result of testing can be found in build/reports/tests/test/packages/default-package.html
+Result of testing can be found in build/reports/tests/test/index.html
+
+##### How to run integration tests
+
+Enter this in the terminal to run integration tests:
+
+ ```bash
+$ gradle integTest
+ ```
+
+Result of testing can be found in build/reports/tests/integTest/index.html
