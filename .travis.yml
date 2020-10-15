@@ -1,3 +1,4 @@
 language: kotlin
-script:
-	echo Hello world! 
+deploy:
+  provider: script
+  script: bash script.sh 
