@@ -1,0 +1,24 @@
+fifo: 1 2 3 4 0 1 2 0 0 3 4 1 2
+lru: 1 2 3 4 0 2 0 0 0 2 1 0 4
+opt: 1 2 3 4 0 2 0 0 0 2 4 0 2
+fifoCount: 10
+lruCount: 8
+optCount: 8
+-
+Error: Not positive number on the first line
+-
+Error: Incorrect number of variables on the first line
+-
+Error: Not positive number on the second line
+-
+Error: Incorrect number of rows
+-
+Error: Not positive number on the second line
+-
+fifo: 1 2 3 4 0 0 0 1 2 0 3 4 1
+lru: 1 2 3 4 0 0 0 1 2 0 3 1 2
+opt: 1 2 3 4 0 0 0 3 3 0 3 0 0
+fifoCount: 9
+lruCount: 9
+optCount: 7
+-
